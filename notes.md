@@ -573,6 +573,255 @@ Best mental model:
 
 - chunking defines the basic unit of knowledge that retrieval can return
 
+#### Parametric vs non-parametric knowledge
+
+Parametric knowledge means knowledge stored inside the model weights.
+
+Examples:
+
+- pretrained LLM knowledge
+- information the model has learned during training
+
+Non-parametric knowledge means knowledge fetched from external memory instead of relying only on model weights.
+
+Examples in RAG:
+
+- retrieved documents
+- vector database
+- external knowledge base
+
+Best mental model:
+
+- LLM memory in weights = parametric
+- retrieved external documents = non-parametric
+- RAG combines both
+
+#### Embeddings
+
+Embeddings are numerical vector representations of text that capture meaning.
+
+Why embeddings are needed:
+
+- dense retrieval cannot search raw text by meaning
+- queries and chunks need to be represented in the same vector space
+
+How embeddings are used in RAG:
+
+1. split documents into chunks
+2. convert chunks into embeddings
+3. store them in a vector database
+4. convert the user query into an embedding
+5. compare query and chunk embeddings
+6. retrieve the nearest chunks
+
+What embeddings try to capture:
+
+- semantic meaning
+- contextual similarity
+- related concepts
+- paraphrased intent
+
+Important note:
+
+- embeddings are not readable text
+- they are mathematical representations of meaning
+
+What affects embedding usefulness:
+
+- quality of the embedding model
+- domain fit
+- chunk quality
+- similarity metric used at retrieval time
+
+Common mistakes:
+
+- thinking embeddings are just text compression
+- assuming embeddings understand meaning perfectly
+- blaming embeddings when chunking is poor
+
+Best mental model:
+
+- embeddings convert chunks and queries into searchable meaning vectors
+
+#### Similarity between embeddings
+
+Similarity between embeddings is measured by comparing the query vector with stored chunk vectors.
+
+Main methods:
+
+1. cosine similarity
+2. dot product
+3. Euclidean distance
+
+Cosine similarity:
+
+- mainly cares about vector direction
+- useful when semantic alignment matters more than vector magnitude
+
+Dot product:
+
+- depends on both direction and magnitude
+- can score higher when vectors point similarly and also have large values
+
+Important idea:
+
+- cosine mostly asks whether vectors point in the same direction
+- dot product asks about direction and vector size together
+
+Why metric choice matters:
+
+- some embedding models are trained for cosine similarity
+- some are trained for dot-product retrieval
+- using the wrong metric can reduce retrieval quality
+
+When dot product can help:
+
+- if vector magnitude carries useful signal
+- if the model was trained so relevant pairs get high dot product
+
+When cosine can help:
+
+- if magnitude is noisy or not meaningful
+- if direction is the main semantic signal
+
+Nearest neighbor idea:
+
+- retrieval searches for chunk vectors that are nearest to the query vector under the chosen similarity metric
+
+#### Vector databases
+
+A vector database is a system designed to store embeddings and retrieve nearest vectors efficiently.
+
+What a vector database usually stores:
+
+- embedding vector
+- original chunk text
+- metadata
+- document identifiers
+
+What it does:
+
+1. stores vectors
+2. indexes vectors for efficient search
+3. searches nearest vectors for a query
+4. returns matching chunks
+5. often supports metadata filtering
+
+Why a vector database is needed:
+
+- brute-force comparison becomes too slow at scale
+- dense retrieval needs efficient nearest-neighbor search
+
+Examples:
+
+- Pinecone
+- Weaviate
+- Qdrant
+- Milvus
+- Chroma
+- PostgreSQL with pgvector
+- FAISS as a vector search library
+
+Important note:
+
+- a vector database does not guarantee good RAG by itself
+- chunking, embeddings, retrieval design, and prompting still matter
+
+Best mental model:
+
+- vector DB stores and searches meaning vectors efficiently
+
+#### ANN: Approximate Nearest Neighbor
+
+ANN means Approximate Nearest Neighbor search.
+
+Why ANN is used:
+
+- exact nearest-neighbor search becomes too slow on very large vector collections
+- ANN finds very close neighbors much faster without checking every vector
+
+Core idea:
+
+- similar vectors tend to live near each other in vector space
+- ANN organizes vector space so search can focus only on promising regions
+
+Exact vs approximate search:
+
+- exact search checks all vectors and finds the true nearest ones
+- ANN uses structured search and returns very close neighbors much faster
+
+What ANN is optimizing:
+
+- speed
+- search quality
+- memory usage
+
+Common ANN strategy families:
+
+1. clustering or partitioning
+2. graph-based search
+3. compressed or hashed indexing
+
+How ANN narrows search space:
+
+- clustering searches only the most promising groups
+- graph search walks through nearby nodes toward better candidates
+- compressed indexes shortlist candidates quickly before detailed comparison
+
+Best mental model:
+
+- exact search checks everything
+- ANN searches intelligently in the most promising region
+
+#### Generation
+
+Generation is the stage where the LLM produces the final answer using the user query and the retrieved context.
+
+Where generation fits:
+
+1. indexing prepares knowledge
+2. retrieval finds relevant chunks
+3. generation turns those chunks into the final answer
+
+What good generation should do:
+
+- answer clearly
+- stay grounded in retrieved context
+- synthesize multiple relevant chunks when needed
+- avoid unsupported claims
+- say when the answer is not available in context
+
+What affects generation quality:
+
+- prompt design
+- context quality
+- context ordering
+- number of chunks passed
+- model grounding behavior
+
+Grounded generation:
+
+- answer should be based on retrieved evidence, not unsupported model memory
+
+Common generation mistakes:
+
+- letting the model answer too freely
+- using weak prompts
+- sending too much noisy context
+- assuming retrieval alone removes hallucination
+- failing to handle missing answers
+
+Industry practice:
+
+- tell the model to answer only from provided context
+- allow “not enough information” responses
+- add citations when possible
+- use structured output when reliability matters
+
+Best mental model:
+
+- generation is evidence-to-answer conversion
+
 #### Generation includes
 
 - sending the question plus retrieved context to the LLM
